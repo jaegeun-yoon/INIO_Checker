@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container">
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">
+            파일 업로드
+        </button>
+        {% endbuttons %}
+    </form>
+</div>
+{% endblock%}
