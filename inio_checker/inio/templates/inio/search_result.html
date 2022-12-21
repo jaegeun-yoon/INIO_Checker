@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if Inio_list %}
+
+<table class="table">
+<thead>
+<tr>
+    <th scope="col">서버 상태</th>
+    <th scope="col">도메인 주소</th>
+    <th scope="col">설명</th>
+<tr>
+</thead>
+
+<tbody>
+    {% for inio in Inio_list %}
+    <tr>
+    <td>{{ inio.status }}</td>
+    <td>{{ inio.domain }}</td>
+    <td>{{ inio.description }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
+
+{% elif search_word %}
+<br>
+  <center>
+    <b>
+      <strong>{{ search_word }}</strong> 발견된 값이 없습니다! 검색어를 수정해 보세요.
+    </b>
+  </center>
+{% endif %}
+
+{% endblock %}

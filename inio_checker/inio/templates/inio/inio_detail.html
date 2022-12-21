@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<body>
+    status : {{ object.status }}<br>
+    domain : {{ object.domain }}<br>
+    description : {{ object.description }}<br>
+    created : {{ object.created }}<br>
+    updated : {{ object.updated }}<br>
+</body>
+{% endblock %}
