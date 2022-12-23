@@ -11,7 +11,6 @@ python3 manage.py makemigrations
 
 관리자 계정 생성
 python3 manage.py createsuperuser
-admin/dishfwk12# (야놀자12#)
 
 서버 구동
 python3 manage.py runserver
