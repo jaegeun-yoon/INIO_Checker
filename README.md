@@ -14,6 +14,3 @@ python3 manage.py createsuperuser
 
 서버 구동
 python3 manage.py runserver
-
-소스 파일
-https://github.com/jaegeun-yoon/INIO_Checker
