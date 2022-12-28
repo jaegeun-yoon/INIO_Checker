@@ -5,6 +5,16 @@
 {% load static %}
 <p></p>
 <br>
+<script>
+function selectAll(selectAll)  {
+  const checkboxes
+       = document.getElementsByName('select_url');
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.checked = selectAll.checked;
+  })
+}
+</script>
 <div class="list-group mb-3">
 <form name="list-category" action="{% url 'inio:URLClassifier' %}" method="post">
 {% csrf_token %}
@@ -22,10 +32,12 @@
 </form>
 </div>
 
+<form action="{% url 'inio:domain_check' %}" method="post" enctype="multipart/form-data">
+{% csrf_token %}
 <table class="main_table">
     <thead>
         <tr>
-            <th scope="col">No.</th>
+            <th scope=""col><input type="checkbox" name="select_url" value="0" onclick="selectAll(this)"> All</th>
             <th scope="col">Status</th>
             <th scope="col">Domain</th>
             <th scope="col">Description</th>
@@ -40,7 +52,7 @@
         {% for inio in object_list %}
         <tr>
             <td>
-                {{ forloop.counter }}
+                <input type="checkbox" name="select_url" value={{ inio.id }}>
             </td>
             <td>
                 {{ inio.status }}
@@ -67,6 +79,8 @@
         {% endfor %}
     </tbody>
 </table>
+<button class="btn btn-primary" type="submit">요청</button>
+</form>
 {% endblock %}
 
 

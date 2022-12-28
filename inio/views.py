@@ -24,6 +24,7 @@ import zipfile
 import xlsxwriter
 import csv
 import os, os.path
+from requests.exceptions import ConnectTimeout
 
 class InioListView(LoginRequiredMixin, ListView):
     model = Inio
@@ -33,7 +34,7 @@ class InioListView(LoginRequiredMixin, ListView):
     def dispatch(self, request, *args, **kwargs):
         object_list = Inio.objects.all()
         categories = Category.objects.all()
-        return render(request, 'inio/inio_list.html', {'object_list': object_list, 'categories':categories})
+        return render(request, 'inio/inio_list.html', {'object_list': object_list, 'categories': categories})
 
 
 class InioCreateView(LoginRequiredMixin, CreateView):
@@ -57,12 +58,14 @@ class InioCreateView(LoginRequiredMixin, CreateView):
 
                 return HttpResponseRedirect('/')
 
+
 class InioDetailView(LoginRequiredMixin, DetailView):
     model = Inio
 
     def checker_detail(request, id):
         object = get_object_or_404(Inio, id=id)
         return render(request, 'inio/inio_detail.html', {'object': object})
+
 
 class InioUpdateView(LoginRequiredMixin, UpdateView):
     model = Inio
@@ -88,9 +91,11 @@ class InioUpdateView(LoginRequiredMixin, UpdateView):
             else:
                 return self.render_to_response({'form': form})
 
+
 class InioDeleteView(LoginRequiredMixin, DeleteView):
     model = Inio
     success_url = reverse_lazy('inio:list')
+
 
 class SearchFormView(FormView):
     form_class = SearchForm
@@ -109,21 +114,41 @@ class SearchFormView(FormView):
         context['Inio_list'] = Inio_list
         return render(self.request, 'inio/search_result.html', context)
 
+
 def URLClassifier(request):
     if request.method == 'POST':
         category = str(request.POST['category'])
         categories = Category.objects.all()
 
-        if (not category) or (category == "0") :
+        if (not category) or (category == "0"):
             object_list = Inio.objects.all()
             return render(request, 'inio/inio_list.html', {'object_list': object_list, 'categories': categories})
 
         object_list = Inio.objects.filter(category__exact=category)
         return render(request, 'inio/inio_list.html', {'object_list': object_list, 'categories': categories})
 
+
 @login_required
 def domain_check(request):
-    return render(request, 'inio/report.html', {'object_list': object_list})
+    if request.POST:
+        select_url = request.POST.getlist('select_url')
+        url_list = Inio.objects.filter(pk__in=select_url)
+
+        for url in url_list:
+            try:
+                res = requests.get(url.domain, timeout=1)
+            except ConnectTimeout:
+                continue
+            except:
+                continue
+            print(url.domain, url.status, res.status_code)
+            if res.status_code == 200 or res.status_code == 302:
+                url.status = True
+            url.save()
+
+    object_list = Inio.objects.all()
+    categories = Category.objects.all()
+    return render(request, 'inio/inio_list.html', {'object_list': object_list, 'categories': categories})
 
 @login_required
 def excel_download(request):
@@ -140,13 +165,16 @@ def excel_download(request):
     excel_file = IO()
 
     xlwriter = pd.ExcelWriter(excel_file, mode="w+", engine="xlsxwriter")
-    df.to_excel(xlwriter, header = True, index=False, sheet_name="Domain List")
+    df.to_excel(xlwriter, header=True, index=False, sheet_name="Domain List")
     xlwriter.save()
     excel_file.seek(0)
 
-    response = HttpResponse(excel_file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', charset="utf-8")
+    response = HttpResponse(excel_file.read(),
+                            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            charset="utf-8")
     response['Content-Disposition'] = 'attachment; filename=DomainList_' + str(time.time()) + '.xlsx'
     return response
+
 
 @login_required
 def csv_download(request):
@@ -163,7 +191,7 @@ def csv_download(request):
     response = HttpResponse(content_type='text/csv', charset="utf-8")
     response['Content-Disposition'] = 'attachment; filename=DomainList_' + str(time.time()) + '.csv'
 
-    df.to_csv(path_or_buf=response, header = True, index=False)
+    df.to_csv(path_or_buf=response, header=True, index=False)
     return response
 
 
@@ -184,48 +212,48 @@ def zip_download(request):
     with zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED) as zf:
         with zf.open("Domain_List.xlsx", "w") as buffer:
             with pd.ExcelWriter(buffer) as writer:
-                df.to_excel(writer, header = True, index=False, sheet_name="in, io domain lists")
+                df.to_excel(writer, header=True, index=False, sheet_name="in, io domain lists")
 
     response = HttpResponse(zipname.getvalue(), content_type='application/x-zip-compressed', charset="utf-8")
     response['Content-Disposition'] = 'attachment; filename=DomainList_' + str(time.time()) + '.zip'
-    
+
     return response
 
 
 @login_required
 def excel_upload(request):
-
-    if request.method == 'POST' :
+    if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
 
             filename = request.FILES['file']
 
-            df = pd.read_excel(filename, engine = "openpyxl")
+            df = pd.read_excel(filename, engine="openpyxl")
             df = pd.DataFrame(df, columns=['domain'])
             df = df.fillna('')
 
-            try :
+            try:
                 for domain in df['domain']:
 
-                    if not domain == '' :
+                    if not domain == '':
                         Inio(category=Category(id=1), domain=domain).save()
                     else:
                         pass
-            except :
+            except:
                 return render(request, 'inio/inio_error.html')
 
             os.remove(os.path.join(settings.MEDIA_ROOT, str(filename)))
-            
+
             return HttpResponseRedirect('/')
     else:
         form = UploadFileForm()
         return render(request, 'inio/inio_upload.html', {'form': form})
 
+
 @login_required
 def csv_upload(request):
-    if request.method == 'POST' :
+    if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
@@ -237,18 +265,18 @@ def csv_upload(request):
             df = pd.DataFrame(df, columns=['domain'])
             df = df.fillna('')
 
-            try :
+            try:
                 for domain in df['domain']:
 
-                    if not domain == '' :
+                    if not domain == '':
                         Inio(category=Category(id=1), domain=domain).save()
                     else:
                         pass
-            except :
+            except:
                 return render(request, 'inio/inio_error.html')
 
             os.remove(os.path.join(settings.MEDIA_ROOT, str(filename)))
-            
+
             return HttpResponseRedirect('/')
     else:
         form = UploadFileForm()
