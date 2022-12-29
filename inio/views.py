@@ -261,15 +261,28 @@ def csv_upload(request):
             filename = request.FILES['file']
             file_path = os.path.join(settings.MEDIA_ROOT, str(filename))
 
-            df = pd.read_csv(file_path, sep=',')
+            df = pd.read_csv(file_path, encoding='utf-8')
             df = pd.DataFrame(df, columns=['domain'])
             df = df.fillna('')
 
             try:
                 for domain in df['domain']:
+                    domain = domain.strip()
+                    domain_ext = domain.split('.')
 
-                    if not domain == '':
-                        Inio(category=Category(id=1), domain=domain).save()
+                    # in, io domain filtering
+                    if ('in' in domain_ext[-1]) or ('io' in domain_ext[-1]):
+                        try:
+                            protocol = domain.split('://')
+
+                            if (protocol[0] == 'https') or (protocol[0] == 'http') :
+                                psss
+                            else:
+                                domain = "https://" + domain
+
+                            Inio(category=Category(id=5), domain=domain).save()
+                        except:
+                            pass
                     else:
                         pass
             except:
