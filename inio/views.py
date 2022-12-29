@@ -237,7 +237,7 @@ def excel_upload(request):
                 for domain in df['domain']:
 
                     if not domain == '':
-                        Inio(category=Category(id=1), domain=domain).save()
+                        Inio(category=Category(id=7), domain=domain).save() # category : etc
                     else:
                         pass
             except:
@@ -280,7 +280,7 @@ def csv_upload(request):
                             else:
                                 domain = "https://" + domain
 
-                            Inio(category=Category(id=5), domain=domain).save()
+                            Inio(category=Category(id=7), domain=domain).save() # category : etc
                         except:
                             pass
                     else:
